@@ -19,22 +19,22 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module topCPU#(
-    parameter DATA_SIZE = 16,
-    parameter ADDRESS_LENGTH = 12,
-    parameter MEM_INIT_FILE = ""
-    )(input sys_clock,user_clock,reset,continue,
-      output [DATA_SIZE-1:0] PC_out/*,*/
-      /*output [DATA_SIZE*6-1:0] R_allout*/);
+//module topCPU#(
+//    parameter DATA_SIZE = 16,
+//    parameter ADDRESS_LENGTH = 12,
+//    parameter MEM_INIT_FILE = ""
+//    )(input sys_clock,user_clock,reset,continue,
+//      output [DATA_SIZE-1:0] PC_out/*,*/
+//      /*output [DATA_SIZE*6-1:0] R_allout*/);
       
-      reg fake_clock;
+//      reg fake_clock;
       
-      always@(posedge sys_clock)
-        fake_clock <= user_clock;
+//      always@(posedge sys_clock)
+//        fake_clock <= user_clock;
       
-    CPU epyc(fake_clock,reset,continue,PC_out,/*R_allout*/);
-    defparam epyc.MEM_INIT_FILE="C:/Users/bupochen/EC551/Lab1/meminit.txt"; 
-endmodule
+//    CPU epyc(fake_clock,reset,continue,PC_out,/*R_allout*/);
+//    defparam epyc.MEM_INIT_FILE="C:/Users/bupochen/EC551/Lab1/meminit.txt"; 
+//endmodule
 module CPU_wrapper#(
     parameter DATA_SIZE = 16,
     parameter ADDRESS_LENGTH = 12,
@@ -44,12 +44,12 @@ module CPU_wrapper#(
       output [DATA_SIZE*6-1:0] R_allout);
       
       reg fake_clock;
-      
-      always@(posedge sys_clock)
+      wire div_clock;
+      clock_div_22#(10) cd(sys_clock,reset,div_clock);
+      always@(posedge div_clock)
         fake_clock <= user_clock;
       
     CPU epyc(fake_clock,reset,continue,PC_out,R_allout);
-    defparam epyc.MEM_INIT_FILE="X:/EC551/Lab1/meminit.txt"; 
 endmodule
 module CPU#(
     parameter DATA_SIZE = 16,
