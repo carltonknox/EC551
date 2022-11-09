@@ -57,7 +57,11 @@ module demo_vlog(input clock,
     wire div_clock;
     clock_div_22#(21) cd(CLK50MHZ,0,div_clock);
     assign send = flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
-    assign data = keycode[7:0];
+    wire [7:0] ascii;
+    ps2_to_ascii pta(keycode[7:0],ascii);
+    assign data = ascii;
+    
+    
 //    always@(posedge flag) begin
 //        if(keycode[15:8]!=8'hF0) begin
 ////            send<=1;
