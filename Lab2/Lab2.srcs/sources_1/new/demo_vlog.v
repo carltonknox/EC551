@@ -35,15 +35,17 @@ module demo_vlog(input clock,
     always @(posedge(clock))begin
         CLK50MHZ<=~CLK50MHZ;
     end
+    wire flag;
     PS2Receiver keyboard (
         .clk(CLK50MHZ),
         .kclk(PS2_CLK),
         .kdata(PS2_DATA),
-        .keycodeout(keycode[31:0])
+        .keycodeout(keycode[31:0]),
+        .flag(flag)
         );
     wire ready;
-    reg [7:0] data;
-    reg send;
+    wire [7:0] data;
+    wire send;
     reg cnt;
 //    always@(posedge PS2_CLK) //here
 //    begin
@@ -52,16 +54,20 @@ module demo_vlog(input clock,
 //        cnt=1;
         
 //        end
-    always@(posedge PS2_CLK) begin
-        if(keycode[15:8]!=8'hF0) begin
-            send<=1;
-            data<=keycode[7:0];
-        end
-        else send=0;
-//        if(keycode[15:8]==8'hF0) begin
-//            data=keycode[7:0];
+    wire div_clock;
+    clock_div_22#(21) cd(CLK50MHZ,0,div_clock);
+    assign send = flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+    assign data = keycode[7:0];
+//    always@(posedge flag) begin
+//        if(keycode[15:8]!=8'hF0) begin
+////            send<=1;
+//            data<=keycode[7:0];
 //        end
-    end
+//        else send=0;
+////        if(keycode[15:8]==8'hF0) begin
+////            data=keycode[7:0];
+////        end
+//    end
 //    always@(negedge PS2_CLK) begin
 //        send<=0;
 //    end

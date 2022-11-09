@@ -24,7 +24,8 @@ module PS2Receiver(
     input clk,
     input kclk,
     input kdata,
-    output [31:0] keycodeout
+    output [31:0] keycodeout,
+    output reg flag
     );
     
     
@@ -33,7 +34,7 @@ module PS2Receiver(
     reg [7:0]dataprev;
     reg [3:0]cnt;
     reg [31:0]keycode;
-    reg flag;
+//    reg flag;
     
     initial begin
         keycode[31:0]<=0'h00000000;
@@ -70,7 +71,7 @@ always@(negedge(kclkf))begin
 end
 
 always @(posedge flag)begin
-    if (dataprev!=datacur)begin
+    /*if (dataprev!=datacur)*/begin
         keycode[31:24]<=keycode[23:16];
         keycode[23:16]<=keycode[15:8];
         keycode[15:8]<=dataprev;
