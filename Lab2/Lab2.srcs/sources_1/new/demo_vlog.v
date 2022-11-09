@@ -45,23 +45,25 @@ module demo_vlog(input clock,
     reg [7:0] data;
     reg send;
     reg cnt;
-    always@(posedge PS2_CLK) //here
-    begin
-        if(cnt)
-            send=0;
-        cnt=1;
+//    always@(posedge PS2_CLK) //here
+//    begin
+//        if(cnt)
+//            send=0;
+//        cnt=1;
         
-        end
+//        end
     always@(posedge PS2_CLK) begin
-        if(/**data != keycode[7:0] &&**/ keycode[15:8]==8'hF0) begin
+        if(keycode[15:8]!=8'hF0) begin
             send<=1;
-            cnt=0;
             data<=keycode[7:0];
-            end
+        end
         else send=0;
 //        if(keycode[15:8]==8'hF0) begin
 //            data=keycode[7:0];
 //        end
     end
+//    always@(negedge PS2_CLK) begin
+//        send<=0;
+//    end
     UART_TX_CTRL UTC(.CLK(clock),.READY(ready),.UART_TX(uart_tx),.DATA(data),.SEND(send));
 endmodule
