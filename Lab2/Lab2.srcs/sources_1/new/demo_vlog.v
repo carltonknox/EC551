@@ -31,7 +31,8 @@ module demo_vlog(input clock,
     );
     reg CLK50MHZ=0;    
     wire [31:0]keycode;
-    reg [0:0] state;
+    reg [2:0] state;
+    reg [2:0] nextstate;
     
     
     wire flag;
@@ -49,8 +50,17 @@ module demo_vlog(input clock,
     wire ready;
     reg [7:0] data;
     reg send;
-    parameter WSS =58;
-    reg [8*WSS-1:0] welcomeString = "Hello EC551. My name is updog Jr.\n\rPlease enter a mode: ";
+    parameter WSS =60;
+    reg [8*WSS-1:0] welcomeString = "\n\rHello EC551. My name is updog Jr.\n\rPlease enter a mode: ";
+    parameter LSS=40;
+    reg [8*LSS-1:0] LString = "\n\rMode L: Load Instructions from UART\n\r";
+    parameter ISS=31;
+    reg [8*LSS-1:0] IString = "\n\rMode I: Enter Instructions\n\r";
+    parameter ASS=33;
+    reg [8*ASS-1:0] AString = "\n\rMode A: Run an ALU operation\n\r";
+    parameter BSS=30;
+    reg [8*BSS-1:0] BString = "\n\rMode B: Benchmark Program\n\r";
+    
     reg [5:0] i;
    always @(posedge(clock))begin
         CLK50MHZ<=~CLK50MHZ;
@@ -58,6 +68,8 @@ module demo_vlog(input clock,
             state=0;
             i=0;
             send=0;
+            nextstate=1;
+            CLK50MHZ=0; 
         end
         else begin
         //welcome
@@ -71,9 +83,69 @@ module demo_vlog(input clock,
                     end
                     else begin
                         send=0;
-                        state=1;
+                        state=1;//go to mode select state
                     end
                 end
+            1 : begin
+                send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                data = ascii;
+                case(ascii)
+                    8'h69:  nextstate = 2;//I
+                    8'h6C:  nextstate = 3;//L
+                    8'h61:  nextstate = 4;//A
+                    8'h62:  nextstate = 5;//B
+                    8'h0A:  begin state = nextstate; i=0; send=0; end
+                    default:nextstate = 1;//stay
+                endcase
+            end
+            2: begin//I
+                if(i<ISS) begin
+                        data = IString[8*(ISS-i)-1 -: 8];
+                        send=1;
+                        if(ready)
+                            i = i+1;
+                end
+                else begin
+                    send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                    data = ascii;
+                end
+            end
+            3: begin//L
+                if(i<LSS) begin
+                        data = LString[8*(LSS-i)-1 -: 8];
+                        send=1;
+                        if(ready)
+                            i = i+1;
+                end
+                else begin
+                send=0;
+                    
+                end
+            end
+            4: begin//A
+                if(i<ASS) begin
+                        data = AString[8*(ASS-i)-1 -: 8];
+                        send=1;
+                        if(ready)
+                            i = i+1;
+                end
+                else begin
+                    send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                    data = ascii;
+                end
+            end
+            5: begin//B
+                if(i<BSS) begin
+                        data = BString[8*(BSS-i)-1 -: 8];
+                        send=1;
+                        if(ready)
+                            i = i+1;
+                end
+                else begin
+                    send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                    data = ascii;
+                end
+            end
             default : begin
                 send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
                 data = ascii;
