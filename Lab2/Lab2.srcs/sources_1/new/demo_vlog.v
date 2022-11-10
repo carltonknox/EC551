@@ -19,7 +19,6 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
 module demo_vlog(input clock,
     input reset,
     input PS2_CLK,
@@ -60,13 +59,28 @@ module demo_vlog(input clock,
     reg [8*ASS-1:0] AString = "\n\rMode A: Run an ALU operation\n\r";
     parameter BSS=30;
     reg [8*BSS-1:0] BString = "\n\rMode B: Benchmark Program\n\r";
-    
+    parameter OSS=7;
+    reg [8*OSS-1:0] OString = "\n\r  \n\r";
+
     reg [5:0] i;
+    reg [5:0] j;
+    reg [2:0] A;
+    reg [2:0] B;
+    reg [1:0] ALUOp;
+    wire [2:0] C;
+
+    reg idle;
+    reg [1:0] cnt;
+    ALU alu(A,B,ALUOp,C);   
+    
+    wire ascii_out;
+    ascii2op a2o(data, ascii_out);
    always @(posedge(clock))begin
         CLK50MHZ<=~CLK50MHZ;
         if(reset) begin
             state=0;
             i=0;
+            j=63;
             send=0;
             nextstate=1;
             CLK50MHZ=0; 
@@ -128,10 +142,37 @@ module demo_vlog(input clock,
                         send=1;
                         if(ready)
                             i = i+1;
+                        idle = 1;
+                end
+                else if (j < OSS) begin
+                                     
+                        data = OString[8*(OSS-i)-1 -: 8];
+                        send=1;
+                        if(ready)
+                            j = j+1;
+                        idle = 1;
                 end
                 else begin
+                if (idle) begin
+                 cnt = 0;
+                 A = 0;
+                 B = 0;
+                 ALUOp = 0;
+                 idle = 0;
+                end
+                else
+                begin
                     send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
                     data = ascii;
+                    if (flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)) begin
+                        cnt = cnt + 1;
+                    end
+                    case(cnt)
+                    1: A = data - 48;
+                    2: ALUOp = ascii_out;
+                    3: B = data - 48;
+                    endcase
+                end
                 end
             end
             5: begin//B
