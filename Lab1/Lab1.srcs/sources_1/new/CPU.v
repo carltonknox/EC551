@@ -49,7 +49,7 @@ module CPU_wrapper#(
       always@(posedge div_clock)
         fake_clock <= user_clock;
       
-    CPU epyc(fake_clock,reset,continue,PC_out,R_allout);
+    CPU epyc(fake_clock,reset,continue,PC_out,R_allout,0,0,0);
 endmodule
 module CPU#(
     parameter DATA_SIZE = 16,
@@ -57,7 +57,10 @@ module CPU#(
     parameter MEM_INIT_FILE = ""
     )(input clock,reset,continue,
       output [DATA_SIZE-1:0] PC_out,
-      output [DATA_SIZE*6-1:0] R_allout
+      output [DATA_SIZE*6-1:0] R_allout,
+      input DMA,
+      input [ADDRESS_LENGTH-1:0] address_DMA,
+      input [DATA_SIZE-1:0] data_in_DMA
     );
     wire [2:0] reg_select1,reg_select2;
     wire [DATA_SIZE-1:0] reg_in1,reg_in2,reg_out1,reg_out2;
@@ -73,7 +76,7 @@ module CPU#(
     wire write_enable_mem;
     wire [DATA_SIZE-1:0] fetch_out;
     wire [ADDRESS_LENGTH-1:0] PC_address;
-    memory mem(mem_address,PC_address,mem_in,mem_out,fetch_out,write_enable_mem,clock,reset);
+    memory mem(mem_address,PC_address,mem_in,mem_out,fetch_out,write_enable_mem,clock,reset,DMA,address_DMA,data_in_DMA);
     defparam mem.MEM_INIT_FILE = MEM_INIT_FILE;
     
     wire [DATA_SIZE-1:0] PC_next;

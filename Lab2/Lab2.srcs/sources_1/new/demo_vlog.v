@@ -45,7 +45,17 @@ module demo_vlog(input clock,
         );
         
     wire [7:0] ascii;
+    wire [3:0] hexdigit;
+    ascii_to_hexdigit(ascii,hexdigit);
+    
     ps2_to_ascii pta(keycode[7:0],ascii);
+    
+    parameter DATA_SIZE = 16;
+    parameter ADDRESS_LENGTH = 12;
+    reg DMA;
+    reg [ADDRESS_LENGTH-1:0] address_DMA;
+    reg [DATA_SIZE-1:0] data_in_DMA;
+    CPU epyc(clock,reset,0,PC_out,R_allout,DMA,address_DMA,data_in_DMA);
     
     wire ready;
     reg [7:0] data;
@@ -62,6 +72,8 @@ module demo_vlog(input clock,
     reg [8*BSS-1:0] BString = "\n\rMode B: Benchmark Program\n\r";
     
     reg [5:0] i;
+    reg idle;
+    reg [2:0] cnt;
    always @(posedge(clock))begin
         CLK50MHZ<=~CLK50MHZ;
         if(reset) begin
@@ -104,10 +116,48 @@ module demo_vlog(input clock,
                         send=1;
                         if(ready)
                             i = i+1;
+                        idle=1;
                 end
                 else begin
-                    send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
-                    data = ascii;
+                    if(idle) begin
+                        DMA=0;
+                        address_DMA=31;
+                        data_in_DMA=0;
+                        idle=1;
+                        cnt=0;
+                    end
+                    else begin
+                        if(cnt<4) begin
+                            send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                            data = ascii;
+                            if(send) begin
+                                data_in_DMA[4*(4-cnt)-1 -: 4]=hexdigit;
+                                cnt=cnt+1;                         
+                            end
+                        end
+                        else if(cnt==4) begin
+                            send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                            data = ascii;
+                            if(ascii==8'h0A) begin
+                                cnt=cnt+1;
+                                DMA=1;
+                            end
+                        end
+                        else if(cnt==5) begin
+                            DMA=0;
+                            address_DMA=address_DMA+1;
+                            send<=1;
+                            data<=8'h0D;
+                            if(ready) begin
+                                send=0;
+                                cnt=0;
+                            end
+                        end
+                        else if(cnt==6)begin
+                            
+                        end
+                        
+                    end
                 end
             end
             3: begin//L

@@ -20,12 +20,19 @@ parameter MEM_INIT_FILE = ""
     output [DATA_SIZE-1:0] data_out2,
     input write,
           clock,
-          reset
+          reset,
+          DMA,
+    input [ADDRESS_LENGTH-1:0] address_DMA,
+    input [DATA_SIZE-1:0] data_in_DMA
     );
     reg [DATA_SIZE-1:0] mem [2 ** ADDRESS_LENGTH -1 : 0];
     assign data_out1 = mem[address];
     assign data_out2 = mem[fetch_address];
     always@(posedge clock) begin
+        if(DMA && ~reset) begin
+            mem[address_DMA] = data_in_DMA;
+        end
+        else
         if(write)
             mem[address] = data_in;
     end
