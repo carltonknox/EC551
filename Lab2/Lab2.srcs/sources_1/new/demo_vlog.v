@@ -196,7 +196,7 @@ module demo_vlog(input clock,
                                             10:data = R_allout[(i_reg+1)*DATA_SIZE-1-4-:4];
                                             11:data = R_allout[(i_reg+1)*DATA_SIZE-1-8-:4];
                                             12:data = R_allout[(i_reg+1)*DATA_SIZE-1-12-:4];
-                                            default:data= RegString[8*(RegSS-1)-1-:8];
+                                            default:data= RegString[8*(RegSS-k_reg)-1 -:8];
                                         endcase
                                         send=1;
                                         if(ready)
