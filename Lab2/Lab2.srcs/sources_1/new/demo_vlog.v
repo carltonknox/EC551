@@ -123,7 +123,7 @@ module demo_vlog(input clock,
                         DMA=0;
                         address_DMA=31;
                         data_in_DMA=0;
-                        idle=1;
+                        idle=0;
                         cnt=0;
                     end
                     else begin
@@ -143,7 +143,7 @@ module demo_vlog(input clock,
                                 DMA=1;
                             end
                         end
-                        else if(cnt==5) begin
+                        else if(cnt==5) begin//fix
                             DMA=0;
                             address_DMA=address_DMA+1;
                             send<=1;
