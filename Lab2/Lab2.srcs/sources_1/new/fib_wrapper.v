@@ -62,7 +62,7 @@ module fib_wrapper(
    end
    
    // fib module (rst goes low when last input is ENTER)
-   fibonacci fibonacci(.clk(), .rst((num_in[3:0] == 4'ha)?0:1), .n(n), .sum(sum_wire), .print(print));
+    fibonacci fibonacci(.clk(clk), .rst((num_in[3:0] == 4'ha)?0:1), .n(n), .sum(sum_wire), .print(print));
 
    // storing fib result
    always @(negedge print)begin
