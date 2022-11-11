@@ -60,7 +60,8 @@ module CPU#(
       output [DATA_SIZE*6-1:0] R_allout,
       input DMA,
       input [ADDRESS_LENGTH-1:0] address_DMA,
-      input [DATA_SIZE-1:0] data_in_DMA
+      input [DATA_SIZE-1:0] data_in_DMA,
+      output halted
     );
     wire [2:0] reg_select1,reg_select2;
     wire [DATA_SIZE-1:0] reg_in1,reg_in2,reg_out1,reg_out2;
@@ -81,6 +82,7 @@ module CPU#(
     
     wire [DATA_SIZE-1:0] PC_next;
     wire [DATA_SIZE-1:0] instruction;
+    assign halted=(instruction[15:12]==0);
     wire PC_enable;
     register #(.RESET_VAL(31)) PC(PC_out,PC_next,reset,PC_enable,clock);
     fetch_unit FU(PC_out,fetch_out,PC_address,instruction);

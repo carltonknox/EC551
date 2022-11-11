@@ -55,7 +55,15 @@ module demo_vlog(input clock,
     reg DMA;
     reg [ADDRESS_LENGTH-1:0] address_DMA;
     reg [DATA_SIZE-1:0] data_in_DMA;
-    CPU epyc(clock,reset,0,PC_out,R_allout,DMA,address_DMA,data_in_DMA);
+    reg cpu_en;//cpu enable
+    wire [DATA_SIZE-1:0] PC_out;
+    wire [DATA_SIZE*6-1:0] R_allout;
+    wire halted;
+    CPU epyc(clock & cpu_en,reset,0,PC_out,R_allout,DMA,address_DMA,data_in_DMA,halted);
+    //genvar i;
+//    generate for(i=0;i<6;i=i+1) begin
+//        register R(R_allout[(i+1)*DATA_SIZE-1:i*DATA_SIZE],R_allin[(i+1)*DATA_SIZE-1:i*DATA_SIZE],reset,R_enable[i],clock);
+
     
     wire ready;
     reg [7:0] data;
@@ -66,12 +74,20 @@ module demo_vlog(input clock,
     reg [8*LSS-1:0] LString = "\n\rMode L: Load Instructions from UART\n\r";
     parameter ISS=31;
     reg [8*LSS-1:0] IString = "\n\rMode I: Enter Instructions\n\r";
+    parameter RegSS=16;
+    reg [8*RegSS-1:0] RegString = "\n\rR_ = 0x____\n\r";
+    reg [4:0] k_reg;
     parameter ASS=33;
     reg [8*ASS-1:0] AString = "\n\rMode A: Run an ALU operation\n\r";
     parameter BSS=30;
     reg [8*BSS-1:0] BString = "\n\rMode B: Benchmark Program\n\r";
     
+    wire k_reg_ascii;
+    hex_to_ascii(k_reg,k_reg_ascii);
+    
     reg [5:0] i;
+    reg [2:0] i_reg;
+    reg [DATA_SIZE/4-1:0] j_reg;
     reg idle;
     reg [2:0] cnt;
    always @(posedge(clock))begin
@@ -82,6 +98,7 @@ module demo_vlog(input clock,
             send=0;
             nextstate=1;
             CLK50MHZ=0; 
+            cpu_en=0;
         end
         else begin
         //welcome
@@ -116,7 +133,10 @@ module demo_vlog(input clock,
                         send=1;
                         if(ready)
                             i = i+1;
-                        idle=1;
+                        if(i==ISS) begin
+                            idle=1;
+                            send=0;
+                            end
                 end
                 else begin
                     if(idle) begin
@@ -128,20 +148,31 @@ module demo_vlog(input clock,
                     end
                     else begin
                         if(cnt<4) begin
-                            send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
-                            data = ascii;
-                            if(send) begin
-                                data_in_DMA[4*(4-cnt)-1 -: 4]=hexdigit;
-                                cnt=cnt+1;                         
+                            if(ascii==8'h72) begin//r
+                                cnt<=6;
+                                send<=0;
+                                i_reg<=0;
+                                j_reg<=0;
+                                k_reg<=0;
+                            end
+                            else begin
+                                send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                                data = ascii;
+                                if(send) begin
+                                    
+                                    data_in_DMA[4*(4-cnt)-1 -: 4]=hexdigit;
+                                    cnt=cnt+1;                         
+                                end
                             end
                         end
                         else if(cnt==4) begin
                             send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
                             data = ascii;
-                            if(ascii==8'h0A) begin
-                                cnt=cnt+1;
+                            if(send && ascii==8'h0A) begin
+                                cnt=5;
                                 DMA=1;
                             end
+                            
                         end
                         else if(cnt==5) begin//fix
                             DMA=0;
@@ -150,11 +181,40 @@ module demo_vlog(input clock,
                             data<=8'h0D;
                             if(ready) begin
                                 send=0;
-                                cnt=0;
+                                i=29;
                             end
                         end
                         else if(cnt==6)begin
-                            
+                            cpu_en=1;
+                            if(halted) begin
+                                if(i_reg<6) begin
+                                    if(k_reg<RegSS) begin
+                                        
+                                        case(k_reg)
+                                            3: data = k_reg_ascii;
+                                            9: data = R_allout[(i_reg+1)*DATA_SIZE-1-0-:4];
+                                            10:data = R_allout[(i_reg+1)*DATA_SIZE-1-4-:4];
+                                            11:data = R_allout[(i_reg+1)*DATA_SIZE-1-8-:4];
+                                            12:data = R_allout[(i_reg+1)*DATA_SIZE-1-12-:4];
+                                            default:data= RegString[8*(RegSS-1)-1-:8];
+                                        endcase
+                                        send=1;
+                                        if(ready)
+                                            k_reg=k_reg+1;
+                                        
+                                    end
+                                    else begin//done with current reg, go to next
+                                        if(k_reg==RegSS) begin
+                                            send=0;
+                                            k_reg=0;
+                                            i_reg=i_reg+1;
+                                        end
+                                    end
+                                end
+                                else begin//done printing regs
+                                    
+                                end
+                            end
                         end
                         
                     end
