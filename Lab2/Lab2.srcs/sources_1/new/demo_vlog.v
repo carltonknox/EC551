@@ -46,7 +46,7 @@ module demo_vlog(input clock,
         
     wire [7:0] ascii;
     wire [3:0] hexdigit;
-    ascii_to_hexdigit(ascii,hexdigit);
+    ascii_to_hexdigit a2h1(ascii,hexdigit);
     
     ps2_to_ascii pta(keycode[7:0],ascii);
     
@@ -59,7 +59,7 @@ module demo_vlog(input clock,
     wire [DATA_SIZE-1:0] PC_out;
     wire [DATA_SIZE*6-1:0] R_allout;
     wire halted;
-    CPU epyc(clock & cpu_en,reset,0,PC_out,R_allout,DMA,address_DMA,data_in_DMA,halted);
+    CPU epyc(clock,reset | ~cpu_en,0,PC_out,R_allout,DMA,address_DMA,data_in_DMA,halted);
     //genvar i;
 //    generate for(i=0;i<6;i=i+1) begin
 //        register R(R_allout[(i+1)*DATA_SIZE-1:i*DATA_SIZE],R_allin[(i+1)*DATA_SIZE-1:i*DATA_SIZE],reset,R_enable[i],clock);
@@ -82,16 +82,21 @@ module demo_vlog(input clock,
     parameter BSS=30;
     reg [8*BSS-1:0] BString = "\n\rMode B: Benchmark Program\n\r";
     
-    wire k_reg_ascii;
-    hex_to_ascii(k_reg,k_reg_ascii);
+    
     
     reg [5:0] i;
-    reg [2:0] i_reg;
+    reg [3:0] i_reg;
+    wire [7:0] i_reg_ascii;
+    wire [7:0] reg_val_ascii;
+    reg [3:0] reg_val;
+    hex_to_ascii h2a(i_reg,i_reg_ascii);
+    hex_to_ascii h2a2(reg_val,reg_val_ascii);
     reg [DATA_SIZE/4-1:0] j_reg;
     reg idle;
     reg [2:0] cnt;
    always @(posedge(clock))begin
         CLK50MHZ<=~CLK50MHZ;
+        
         if(reset) begin
             state=0;
             i=0;
@@ -142,13 +147,15 @@ module demo_vlog(input clock,
                     if(idle) begin
                         DMA=0;
                         address_DMA=31;
-                        data_in_DMA=0;
+                        data_in_DMA<=0;
                         idle=0;
                         cnt=0;
+                        cpu_en<=0;
+                        data=0;
                     end
                     else begin
                         if(cnt<4) begin
-                            if(ascii==8'h72) begin//r
+                            if(flag && ascii==8'h72) begin//r
                                 cnt<=6;
                                 send<=0;
                                 i_reg<=0;
@@ -186,33 +193,50 @@ module demo_vlog(input clock,
                         end
                         else if(cnt==6)begin
                             cpu_en=1;
-                            if(halted) begin
+                            
+                            if(halted && ready) begin
+                                
                                 if(i_reg<6) begin
+                                    
                                     if(k_reg<RegSS) begin
-                                        
                                         case(k_reg)
-                                            3: data = k_reg_ascii;
-                                            9: data = R_allout[(i_reg+1)*DATA_SIZE-1-0-:4];
-                                            10:data = R_allout[(i_reg+1)*DATA_SIZE-1-4-:4];
-                                            11:data = R_allout[(i_reg+1)*DATA_SIZE-1-8-:4];
-                                            12:data = R_allout[(i_reg+1)*DATA_SIZE-1-12-:4];
+                                            4: data = i_reg_ascii;
+                                            10:begin 
+                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-0 -:4];
+                                                data<=reg_val_ascii; 
+                                            end
+                                            11:begin 
+                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-4 -:4];
+                                                data <= reg_val_ascii; 
+                                            end
+                                            12:begin 
+                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-8-:4];
+                                                data <= reg_val_ascii; 
+                                            end
+                                            13:begin 
+                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-12-:4];
+                                                data <= reg_val_ascii; 
+                                            end
                                             default:data= RegString[8*(RegSS-k_reg)-1 -:8];
                                         endcase
+//                                        data= RegString[8*(RegSS-k_reg)-1 -:8];
                                         send=1;
-                                        if(ready)
+                                        if(ready) begin
                                             k_reg=k_reg+1;
-                                        
+                                        end
                                     end
                                     else begin//done with current reg, go to next
                                         if(k_reg==RegSS) begin
-                                            send=0;
+//                                            send=0;
                                             k_reg=0;
                                             i_reg=i_reg+1;
                                         end
                                     end
                                 end
                                 else begin//done printing regs
-                                    
+                                    idle=1;
+                                    send=0;
+                                    cpu_en=0;
                                 end
                             end
                         end

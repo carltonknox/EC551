@@ -42,6 +42,7 @@ module ascii_to_hexdigit(
         8'h64: hexdigit=4'hd;
         8'h65: hexdigit=4'he;
         8'h66: hexdigit=4'hf;
+        default: hexdigit=0;
         
     endcase
 endmodule

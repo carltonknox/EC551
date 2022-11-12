@@ -54,7 +54,7 @@ endmodule
 module CPU#(
     parameter DATA_SIZE = 16,
     parameter ADDRESS_LENGTH = 12,
-    parameter MEM_INIT_FILE = ""
+    parameter MEM_INIT_FILE = "C:/Users/ckowk/Documents_Offline/EC551/Lab1/meminit.txt"
     )(input clock,reset,continue,
       output [DATA_SIZE-1:0] PC_out,
       output [DATA_SIZE*6-1:0] R_allout,

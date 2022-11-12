@@ -11,7 +11,7 @@
 module memory#(
 parameter DATA_SIZE = 16,
 parameter ADDRESS_LENGTH = 12,
-parameter MEM_INIT_FILE = ""
+parameter MEM_INIT_FILE = "C:/Users/ckowk/Documents_Offline/EC551/Lab1/meminit.txt"
 )(
     input [ADDRESS_LENGTH-1:0] address,
     input [ADDRESS_LENGTH-1:0] fetch_address,
@@ -29,7 +29,7 @@ parameter MEM_INIT_FILE = ""
     assign data_out1 = mem[address];
     assign data_out2 = mem[fetch_address];
     always@(posedge clock) begin
-        if(DMA && ~reset) begin
+        if(DMA) begin
             mem[address_DMA] = data_in_DMA;
         end
         else
