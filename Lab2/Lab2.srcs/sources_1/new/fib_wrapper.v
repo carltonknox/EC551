@@ -26,7 +26,7 @@ module fib_wrapper(
     input clk,
     input rst,
     output reg send,
-    output reg [7:0] data
+    output reg [3:0] hex
     );
     
     // input side
@@ -72,11 +72,15 @@ module fib_wrapper(
    // printing fib result
    always @(posedge clk) begin
         if ((result != 0) & (ready == 1) & (i != 0)) begin
-            data <= result[31:24];
-            result[31:24]<=result[23:16];
-            result[23:16]<=result[15:8];
-            result[15:8]<=result[7:0];
-            result[7:0]<=8'b0;
+            hex <= result[31:28];
+            result[31:28]<=result[27:24];
+            result[27:24]<=result[23:20];
+            result[23:20]<=result[19:16];
+            result[19:16]<=result[15:12];
+            result[15:12]<=result[11:8];
+            result[11:8]<=result[7:4];
+            result[7:4]<=result[3:0];
+            result[3:0]<=4'b0;
             send <= 1;
             i <= i-1;   
         end else begin
