@@ -25,7 +25,7 @@ module hex_to_ascii(
     output reg [7:0] ascii
     );
     always@(*)
-    case(ascii)
+    case(hexdigit)
         4'h0: ascii=8'h30;
         4'h1: ascii=8'h31;
         4'h2: ascii=8'h32;
