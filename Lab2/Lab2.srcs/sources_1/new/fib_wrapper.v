@@ -76,6 +76,7 @@ module fib_wrapper(
             result[31:24]<=result[23:16];
             result[23:16]<=result[15:8];
             result[15:8]<=result[7:0];
+            result[7:0]<=8'b0;
             send <= 1;
             i <= i-1;   
         end else begin
