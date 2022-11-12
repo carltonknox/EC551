@@ -32,15 +32,13 @@ module fibonacci(
     reg [31:0] previous;
     reg [5:0] counter;
     
-    always @(posedge rst) begin
+    always @(posedge clk) begin
+        if (rst) begin
             previous <= 32'b0;
             current <= 32'b1;
             counter <= 6'b1;
-            print <= 0;
-    end
-    
-    always @(posedge clk) begin
-        if (counter < n) begin
+            print <= 0;       
+        end else if (counter < n) begin
             current <= current + previous;
             previous <= current;
             counter <= counter + 1;
