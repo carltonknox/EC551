@@ -105,11 +105,11 @@ module fib_wrapper(
    end
    
    // fib module (rst goes low when last input is ENTER)
-    fibonacci fibonacci(.clk(clk), .rst(rst | (num_in[3:0] != 4'ha)), .n(n), .sum(sum_wire), .print(print));
+    fibonacci fibonacci(.clk(clk), .rst(rst || (num_in[3:0] != 4'ha)), .n(n), .sum(sum_wire), .print(print));
 
    // output side
    always @(posedge clk) begin
-        if (rst) begin
+        if (rst || (num_in[3:0] != 4'ha)) begin
             send <= 0;
             hex <= 4'b0;
             i <= 4'd8;
