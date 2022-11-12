@@ -103,7 +103,20 @@ module demo_vlog(input clock,
     // B_rst checks fsm is in correct state;
     fib_wrapper fib_module(.ascii(ascii), .flag(flag&&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)), .ready(ready), .clk(clock), .rst(reset||B_rst), .send(B_send), .hex(B_hex));
     hex_to_ascii fib_hex2ascii(B_hex,B_ascii);
+    // ------------------------- Mode A ---------------------------
+    parameter OSS=6;
+    reg [8*OSS-1:0] OString = "\n\r \n\r";
+    wire k_reg_ascii;
+    hex_to_ascii(k_reg,k_reg_ascii);
     
+    reg [5:0] j;   
+    reg [4:0] A;
+    reg [4:0] B;
+    wire [4:0] C;
+    reg [1:0] ALUop;
+    ALU #(.SIZE(5)) alu(A,B,ALUop, C);
+    wire ascii_out;
+    ascii2op a2o(data, ascii_out);
     // ------------------------- State Machine ----------------------
     
    always @(posedge(clock))begin
@@ -275,9 +288,35 @@ module demo_vlog(input clock,
                         if(ready)
                             i = i+1;
                 end
+                else if (j<OSS) begin
+                     case(j)
+                    0: data="\r";
+                    1: data = "x";  
+                    2: data = "x";
+                    3: data = "\n"; 
+                    4: data = "\r"; 
+                    5: begin
+                        send =0;
+                        j = OSS;
+                        idle=1;
+                    end
+                    endcase
+                    send = 1;
+                    if(ready)
+                    j = j + 1;
+                    idle = 1;
+                end
                 else begin
                     send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
                     data = ascii;
+                    if(send)
+                    cnt = cnt +1;
+                    case(cnt)
+                    0: begin A = data ;  end
+                    1: begin ALUop = ascii_out;  end
+                    2: begin B = data;  end
+                    3: begin cnt = 0; j = 0; end
+                    endcase
                 end
             end
             5: begin//B
