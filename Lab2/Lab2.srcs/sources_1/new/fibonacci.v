@@ -42,9 +42,8 @@ module fibonacci(
             current <= current + previous;
             previous <= current;
             counter <= counter + 1;
-            print <= 1;
         end else begin
-            print <= 0;
+            print <= 1;
         end
     end
 

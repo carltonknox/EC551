@@ -94,6 +94,18 @@ module demo_vlog(input clock,
     reg [DATA_SIZE/4-1:0] j_reg;
     reg idle;
     reg [2:0] cnt;
+    
+    // ------------------------- Mode B ---------------------------
+    wire B_send;
+    wire [3:0] B_hex;
+    wire [7:0] B_ascii;
+    reg B_rst;
+    // B_rst checks fsm is in correct state;
+    fib_wrapper fib_module(.ascii(ascii), .flag(flag&&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)), .ready(ready), .clk(clock), .rst(reset||B_rst), .send(B_send), .hex(B_hex));
+    hex_to_ascii fib_hex2ascii(B_hex,B_ascii);
+    
+    // ------------------------- State Machine ----------------------
+    
    always @(posedge(clock))begin
         CLK50MHZ<=~CLK50MHZ;
         
@@ -272,12 +284,14 @@ module demo_vlog(input clock,
                 if(i<BSS) begin
                         data = BString[8*(BSS-i)-1 -: 8];
                         send=1;
+                        B_rst = 1;
                         if(ready)
                             i = i+1;
                 end
                 else begin
-                    send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
-                    data = ascii;
+                    B_rst = 0;
+                    send =  (flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)) | (B_send);
+                    data = (B_send)? B_ascii : ascii;
                 end
             end
             default : begin
