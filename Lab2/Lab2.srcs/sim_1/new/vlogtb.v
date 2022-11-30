@@ -63,6 +63,7 @@ module vlogtb(
         #4 flag=0;
         #4 flag=1;
         #4 flag=0;
+            keycode = 8'h69;
         #4 flag=1;
         #4 flag = 0;
         #4

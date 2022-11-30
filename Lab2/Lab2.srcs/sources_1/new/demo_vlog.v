@@ -54,7 +54,6 @@ module demo_vlog(input clock,
     parameter ADDRESS_LENGTH = 12;
     reg DMA;
     reg [ADDRESS_LENGTH-1:0] address_DMA;
-    reg [ADDRESS_LENGTH-1:0] next_address_DMA;
     reg [DATA_SIZE-1:0] data_in_DMA;
     reg cpu_en;//cpu enable
     wire [DATA_SIZE-1:0] PC_out;
@@ -132,8 +131,6 @@ module demo_vlog(input clock,
             nextstate=1;
             CLK50MHZ=0; 
             cpu_en=0;
-            address_DMA=31;
-            next_address_DMA=31;
         end
         else begin
         //welcome
@@ -176,7 +173,7 @@ module demo_vlog(input clock,
                 else begin
                     if(idle) begin
                         DMA=0;
-                        address_DMA=next_address_DMA;
+                        address_DMA=31;
                         data_in_DMA<=0;
                         idle=0;
                         cnt=0;
@@ -213,8 +210,8 @@ module demo_vlog(input clock,
                             
                         end
                         else if(cnt==5) begin//fix
-                            DMA=1;
-                            next_address_DMA=address_DMA+1;
+                            DMA=0;
+                            address_DMA=address_DMA+1;
                             send<=1;
                             data<=8'h0D;
                             if(ready) begin
@@ -232,16 +229,17 @@ module demo_vlog(input clock,
                                     if(k_reg<RegSS) begin
                                         case(k_reg)
                                             4: data = i_reg_ascii;
-                                            10:begin 
-                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-0 -:4];
-                                                data<=reg_val_ascii; 
+
+                                            10:begin
+                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-0 -:4]; 
+                                                data<=reg_val_ascii;                                                 
                                             end
                                             11:begin 
                                                 reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-4 -:4];
-                                                data <= reg_val_ascii; 
+                                                data <= reg_val_ascii;                                                
                                             end
                                             12:begin 
-                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-8-:4];
+                                                reg_val <= R_allout[(i_reg+1)*DATA_SIZE-1-8-:4]; 
                                                 data <= reg_val_ascii; 
                                             end
                                             13:begin 
@@ -266,7 +264,6 @@ module demo_vlog(input clock,
                                 end
                                 else begin//done printing regs
                                     idle=1;
-                                    next_address_DMA=31;
                                     send=0;
                                     cpu_en=0;
                                 end
