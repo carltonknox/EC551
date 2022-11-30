@@ -56,6 +56,7 @@ module test_vlog(input clock,
     parameter ADDRESS_LENGTH = 12;
     reg DMA;
     reg [ADDRESS_LENGTH-1:0] address_DMA;
+    reg [ADDRESS_LENGTH-1:0] next_address_DMA;
     reg [DATA_SIZE-1:0] data_in_DMA;
     reg cpu_en;//cpu enable
     wire [DATA_SIZE-1:0] PC_out;
@@ -109,6 +110,8 @@ module test_vlog(input clock,
             cpu_en=0;
             prevflag=0;
             curflag=flag;
+            address_DMA=31;
+            next_address_DMA=31;
         end
         else begin
         //welcome
@@ -151,7 +154,7 @@ module test_vlog(input clock,
                 else begin
                     if(idle) begin
                         DMA=0;
-                        address_DMA=31;
+                        address_DMA=next_address_DMA;
                         data_in_DMA<=0;
                         idle=0;
                         cnt=0;
@@ -161,6 +164,7 @@ module test_vlog(input clock,
                     else begin
                         if(cnt<4) begin
                             if(curflag && ascii==8'h72) begin//r
+                                DMA<=0;
                                 cnt<=6;
                                 send<=0;
                                 i_reg<=0;
@@ -188,8 +192,8 @@ module test_vlog(input clock,
                             
                         end
                         else if(cnt==5) begin//fix
-                            DMA=0;
-                            address_DMA=address_DMA+1;
+                            DMA=1;
+                            next_address_DMA=address_DMA+1;
                             send<=1;
                             data<=8'h0D;
                             if(ready) begin
@@ -241,6 +245,7 @@ module test_vlog(input clock,
                                 end
                                 else begin//done printing regs
                                     idle=1;
+                                    next_address_DMA=31;
                                     send=0;
 //                                    cpu_en=0;
                                 end

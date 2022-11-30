@@ -30,13 +30,13 @@ module clock_divider(
     );
 	 
 	 
-reg[20:0] toggle_value = 22'b110010110111001101010;
+reg[31:0] toggle_value = 10000;
 //28'b0101111101011110000100000000;
 
 	 
-reg[20:0] cnt;
+reg[31:0] cnt;
 
-always@(posedge clk_in,rst)
+always@(posedge clk_in)
 begin
 	if (rst==1) begin
 		cnt <= 0;

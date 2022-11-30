@@ -55,7 +55,7 @@ module vlogtb(
     end
     initial begin
         #420 
-        keycode = 8'h71;
+        keycode = 8'h69;
         flag=1;
         #4 flag=0;
             keycode = 8'h70;
@@ -67,8 +67,9 @@ module vlogtb(
         #4 flag = 0;
         #4
         keycode = 8'h5A;
+        #4 flag=1;
         #8
-        keycode = 8'h69;
+        keycode = 8'h70;
         #4 flag=0;
         #4 flag=1;
         #4 flag=0;
@@ -76,6 +77,10 @@ module vlogtb(
         #4 flag=0;
         #4 flag=1;
         #4 flag = 0;
+        #4
+        keycode = 8'h5A;
+        #4 flag=1;
+        #4 flag=0;
         #8;#26
         keycode = 8'h2D;
         flag=1;

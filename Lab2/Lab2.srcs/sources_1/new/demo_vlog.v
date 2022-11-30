@@ -54,12 +54,15 @@ module demo_vlog(input clock,
     parameter ADDRESS_LENGTH = 12;
     reg DMA;
     reg [ADDRESS_LENGTH-1:0] address_DMA;
+    reg [ADDRESS_LENGTH-1:0] next_address_DMA;
     reg [DATA_SIZE-1:0] data_in_DMA;
     reg cpu_en;//cpu enable
     wire [DATA_SIZE-1:0] PC_out;
     wire [DATA_SIZE*6-1:0] R_allout;
     wire halted;
-    CPU epyc(clock,reset | ~cpu_en,0,PC_out,R_allout,DMA,address_DMA,data_in_DMA,halted);
+    wire divided_clock;
+    clock_divider cd(clock,reset,divided_clock);
+    CPU epyc(divided_clock,reset | ~cpu_en,0,PC_out,R_allout,DMA,address_DMA,data_in_DMA,halted);
     //genvar i;
 //    generate for(i=0;i<6;i=i+1) begin
 //        register R(R_allout[(i+1)*DATA_SIZE-1:i*DATA_SIZE],R_allin[(i+1)*DATA_SIZE-1:i*DATA_SIZE],reset,R_enable[i],clock);
@@ -129,6 +132,8 @@ module demo_vlog(input clock,
             nextstate=1;
             CLK50MHZ=0; 
             cpu_en=0;
+            address_DMA=31;
+            next_address_DMA=31;
         end
         else begin
         //welcome
@@ -171,7 +176,7 @@ module demo_vlog(input clock,
                 else begin
                     if(idle) begin
                         DMA=0;
-                        address_DMA=31;
+                        address_DMA=next_address_DMA;
                         data_in_DMA<=0;
                         idle=0;
                         cnt=0;
@@ -180,6 +185,7 @@ module demo_vlog(input clock,
                     end
                     else begin
                         if(cnt<4) begin
+                            cpu_en=0;
                             if(flag && ascii==8'h72) begin//r
                                 cnt<=6;
                                 send<=0;
@@ -207,8 +213,8 @@ module demo_vlog(input clock,
                             
                         end
                         else if(cnt==5) begin//fix
-                            DMA=0;
-                            address_DMA=address_DMA+1;
+                            DMA=1;
+                            next_address_DMA=address_DMA+1;
                             send<=1;
                             data<=8'h0D;
                             if(ready) begin
@@ -217,7 +223,7 @@ module demo_vlog(input clock,
                             end
                         end
                         else if(cnt==6)begin
-                            cpu_en=1;
+                            cpu_en<=1;
                             
                             if(halted && ready) begin
                                 
@@ -260,6 +266,7 @@ module demo_vlog(input clock,
                                 end
                                 else begin//done printing regs
                                     idle=1;
+                                    next_address_DMA=31;
                                     send=0;
                                     cpu_en=0;
                                 end
