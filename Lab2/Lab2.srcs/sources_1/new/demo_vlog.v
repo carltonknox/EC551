@@ -333,8 +333,51 @@ module demo_vlog(input clock,
                 end
                 else begin
                     B_rst = 0;
-                    send =  (flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)) | (B_send);
-                    data = (B_send)? B_ascii : ascii;
+                    case (B_state)
+                        S_Bread: begin
+                            // user enter number
+                            send <=  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                            data <= ascii;
+                            B_newline <= 1;
+                        end
+                        
+                        S_Bcalc: begin
+                            if (B_newline) begin
+                                // new line after input
+                                send <= 1;
+                                data <= "\n";
+                                B_newline <= 0;
+                            end 
+                            else begin
+                                // halt sending data until result is ready
+                                send <= 0;
+                                data <= 0;
+                            end  
+                        end
+                        
+                        S_Bprint: begin
+                            if (B_send) begin
+                                // print result
+                                send <= 1;
+                                data <= B_ascii;
+                                B_newline <= 1;
+                            end 
+                            else if (B_newline) begin
+                                // new line after output
+                                send <= 1;
+                                data <= "\n";
+                                B_newline <= 0;
+                            end 
+                            else begin
+                                send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                                data = ascii;
+                            end
+                        end
+                        default: begin
+                            send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                            data = ascii;
+                        end 
+                    endcase
                 end
             end
             default : begin
