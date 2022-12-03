@@ -212,8 +212,8 @@ set_property -dict { PACKAGE_PIN B12   IOSTANDARD LVCMOS33 } [get_ports { VGA_VS
 #set_property -dict { PACKAGE_PIN M14   IOSTANDARD LVCMOS33 } [get_ports { QSPI_DQ[3] }]; #IO_L2N_T0_D03_14 Sch=qspi_dq[3]
 #set_property -dict { PACKAGE_PIN L13   IOSTANDARD LVCMOS33 } [get_ports { QSPI_CSN }]; #IO_L6P_T0_FCS_B_14 Sch=qspi_csn
 
-set_property IOSTANDARD LVCMOS33 [get_ports reset]
-set_property PACKAGE_PIN V10 [get_ports reset]
+#set_property IOSTANDARD LVCMOS33 [get_ports reset]
+#set_property PACKAGE_PIN V10 [get_ports reset]
 set_property IOSTANDARD LVCMOS33 [get_ports {PC_out[0]}]
 set_property PACKAGE_PIN H17 [get_ports {PC_out[0]}]
 set_property PACKAGE_PIN K15 [get_ports {PC_out[1]}]
@@ -247,5 +247,5 @@ set_property PACKAGE_PIN V14 [get_ports {PC_out[13]}]
 set_property PACKAGE_PIN V12 [get_ports {PC_out[14]}]
 set_property PACKAGE_PIN V11 [get_ports {PC_out[15]}]
 
-set_property PACKAGE_PIN N17 [get_ports user_clock]
+#set_property PACKAGE_PIN N17 [get_ports user_clock]
 set_property IOSTANDARD LVCMOS33 [get_ports user_clock]
