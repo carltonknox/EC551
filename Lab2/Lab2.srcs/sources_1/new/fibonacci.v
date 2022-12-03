@@ -32,7 +32,7 @@ module fibonacci(
     reg [31:0] previous;
     reg [5:0] counter;
     
-    always @(posedge clk) begin
+    always @(posedge clk or posedge rst) begin
         if (rst) begin
             previous <= 32'b0;
             current <= 32'b1;
@@ -42,6 +42,7 @@ module fibonacci(
             current <= current + previous;
             previous <= current;
             counter <= counter + 1;
+            print <= 0;
         end else begin
             print <= 1;
         end
