@@ -44,9 +44,9 @@ module CPU_wrapper#(
       output [DATA_SIZE*6-1:0] R_allout);
       
       reg fake_clock;
-      wire div_clock;
-      clock_div_22#(10) cd(sys_clock,reset,div_clock);
-      always@(posedge div_clock)
+//      wire div_clock;
+//      clock_div_22#(10) cd(sys_clock,reset,div_clock);
+      always@(posedge sys_clock)
         fake_clock <= user_clock;
       
     CPU epyc(fake_clock,reset,continue,PC_out,R_allout,0,0,0);
