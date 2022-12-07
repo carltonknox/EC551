@@ -98,12 +98,17 @@ module demo_vlog(input clock,
     reg [2:0] cnt;
     
     // ------------------------- Mode B ---------------------------
+    parameter S_Bread = 3'b001, S_Bcalc = 3'b010, S_Bprint = 3'b100;
+    
+    reg B_newline;
     wire B_send;
     wire [3:0] B_hex;
     wire [7:0] B_ascii;
     reg B_rst;
+    wire B_rst_wire = B_rst;
+    wire [2:0] B_state;
     // B_rst checks fsm is in correct state;
-    fib_wrapper fib_module(.ascii(ascii), .flag(flag&&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)), .ready(ready), .clk(clock), .rst(reset||B_rst), .send(B_send), .hex(B_hex));
+    fib_wrapper fib_module(.ascii(ascii), .flag(flag&&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)), .ready(ready), .clk(clock), .rst(B_rst_wire), .send(B_send), .hex(B_hex), .state(B_state));
     hex_to_ascii fib_hex2ascii(B_hex,B_ascii);
     // ------------------------- Mode A ---------------------------
     parameter OSS=6;
