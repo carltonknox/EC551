@@ -73,7 +73,7 @@ module ps2_to_ascii(
         8'h49: ascii = 8'h2E;// --.
         8'h4A: ascii = 8'h2F;// --/
         8'h4C: ascii = 8'h3B;// --;
-        8'h55: ascii = 8'h3D;// --=
+        8'h55: ascii = 8'h2B;// --+
         8'h54: ascii = 8'h5B;// --[
         8'h5D: ascii = 8'h5C;// --\
         8'h5B: ascii = 8'h5D;// --]
