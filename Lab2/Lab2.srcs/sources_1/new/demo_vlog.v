@@ -111,19 +111,13 @@ module demo_vlog(input clock,
     fib_wrapper fib_module(.ascii(ascii), .flag(flag&&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)), .ready(ready), .clk(clock), .rst(B_rst_wire), .send(B_send), .hex(B_hex), .state(B_state));
     hex_to_ascii fib_hex2ascii(B_hex,B_ascii);
     // ------------------------- Mode A ---------------------------
-    parameter OSS=6;
-    reg [8*OSS-1:0] OString = "\n\r \n\r";
-    wire k_reg_ascii;
-    hex_to_ascii(k_reg,k_reg_ascii);
-    
-    reg [5:0] j;   
-    reg [4:0] A;
-    reg [4:0] B;
-    wire [4:0] C;
-    reg [1:0] ALUop;
-    ALU #(.SIZE(5)) alu(A,B,ALUop, C);
-    wire ascii_out;
-    ascii2op a2o(data, ascii_out);
+    wire A_send;
+    wire [7:0] A_ascii;
+    reg A_rst;
+    wire A_rst_wire = A_rst;
+    wire [2:0] A_state;
+    // A_rst checks fsm is in correct state;
+    modeA A_module(.ascii_in(ascii), .ready(ready), .clk(clock), .rst(A_rst_wire), .flag(flag&&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0)), .send(A_send), .ascii_out(A_ascii), .state(A_state));
     // ------------------------- State Machine ----------------------
     
    always @(posedge(clock))begin
@@ -294,37 +288,40 @@ module demo_vlog(input clock,
                 if(i<ASS) begin
                         data = AString[8*(ASS-i)-1 -: 8];
                         send=1;
+                        A_rst = 1;
                         if(ready)
                             i = i+1;
                 end
-                else if (j<OSS) begin
-                     case(j)
-                    0: data="\r";
-                    1: data = "x";  
-                    2: data = "x";
-                    3: data = "\n"; 
-                    4: data = "\r"; 
-                    5: begin
-                        send =0;
-                        j = OSS;
-                        idle=1;
-                    end
-                    endcase
-                    send = 1;
-                    if(ready)
-                    j = j + 1;
-                    idle = 1;
-                end
                 else begin
-                    send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
-                    data = ascii;
-                    if(send)
-                    cnt = cnt +1;
-                    case(cnt)
-                    0: begin A = data ;  end
-                    1: begin ALUop = ascii_out;  end
-                    2: begin B = data;  end
-                    3: begin cnt = 0; j = 0; end
+                    A_rst = 0;
+                    case (A_state)
+                        S_read: begin
+                            // user enter number
+                            send <=  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                            data <= ascii;
+                        end
+                        
+                        S_calc: begin
+                            // halt sending data until result is ready
+                            send <= 0;
+                            data <= 0; 
+                        end
+                        
+                        S_print: begin
+                            if (A_send) begin
+                                // print result
+                                send <= 1;
+                                data <= A_ascii;
+                            end 
+                            else begin
+                                send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                                data = ascii;
+                            end
+                        end
+                        default: begin
+                            send =  flag &&(keycode[15:8]!=8'hF0)&&(keycode[7:0]!=8'hF0);
+                            data = ascii;
+                        end 
                     endcase
                 end
             end
